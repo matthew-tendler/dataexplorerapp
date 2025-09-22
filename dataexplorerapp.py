@@ -151,14 +151,25 @@ def main():
             if success_ratio > 0.8:
                 df[col] = parsed
 
+    # Show a quick preview of the uploaded data
+    with st.expander('Raw data preview (first 1,000 rows)'):
+        st.dataframe(df.head(1000))
+
     filtered, applied = build_filters_form(df)
 
-    st.subheader('Export')
     if not applied:
         st.info('Set the required time window and any other filters, then click Apply to enable export.')
         return
 
+    st.subheader('Filtered data')
     st.caption(f"Filtered rows: {len(filtered):,} × {len(filtered.columns)} columns")
+
+    with st.expander('View filtered data table', expanded=True):
+        max_default = min(10_000, len(filtered)) if len(filtered) > 0 else 0
+        max_rows = st.number_input('Rows to display (for performance)', min_value=100, max_value=max(100, len(filtered)) if len(filtered) >= 100 else 100, value=max_default if max_default >= 100 else 100, step=100)
+        st.dataframe(filtered.head(int(max_rows)))
+
+    st.subheader('Export')
 
     chunk_size = 500_000
     if len(filtered) <= chunk_size:
